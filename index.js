@@ -7,6 +7,7 @@ const { SwaggerTheme } = require('swagger-themes');
 const fs = require('fs');
 const path = require('path');
 const redoc = require('redoc-express');
+const cors = require('cors')
 
 const theme = new SwaggerTheme('v3');
 const options = {
@@ -21,12 +22,31 @@ const options = {
 
 app.use(express.json());
 app.use(express.text());
+app.use(cors());
 
 const swaggerOptions = {
     definition: apidef_objeto,
     apis: [`${path.join(__dirname,"./index.js")}`],
     };
 
+
+
+ /**
+ * @swagger
+ * /personaje:
+ *  get:
+ *    tags:
+ *      - Personajes
+ *    summary: Consulta de personaje aleatorio.
+ *    description: Petición Get a la ruta personaje, regresa un personaje de froma aleatoria.
+ *    responses:
+ *      200:
+ *        description: Regresa un Json con un personaje de forma aleatoria.
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/personaje'
+ */
 app.get('/personaje',async(req,res)=>{
     let aletorio = Math.floor(Math.random()*68) + 1 ;
     const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
@@ -37,7 +57,72 @@ app.get('/personaje',async(req,res)=>{
 })
 
 
-app.get('/personaje/:nombre',async(req,res)=>{
+/**
+ * @swagger
+ * /personaje/i/{id}:
+ *  get:
+ *    tags:
+ *      - Personajes
+ *    summary: Consultar un personaje en especifico por el id.
+ *    description: Petición Get a un solo usuario especifico por su id.
+ *    parameters:
+ *      - name: id
+ *        in: path
+ *        description: Id del personaje que se quiera consultar.
+ *        required: true
+ *        schema:
+ *          type: integer
+ *          format: int64 
+ *    responses:
+ *      200:
+ *        description: Regresa un Json con la informacion del personaje que agrego en los parametros.
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/personaje'
+ *      400:
+ *        description: No se encontro el personaje con ese id.
+ */
+app.get('/personaje/i/:id',async(req,res)=>{
+    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const sentenciaSQL = `SELECT * FROM personajes WHERE id = ${[req.params.id]}`;
+    const [rows, fields] = await connection.execute(sentenciaSQL);
+    
+    if(rows.length == 0){
+        res.json({registros:"No se encontro ningun personaje con ese id."});
+    }else{
+        res.json(rows);
+    }
+})
+
+
+/**
+ * @swagger
+ * /personaje/n/{nombre}:
+ *  get:
+ *    tags:
+ *      - Personajes
+ *    summary: Consultar un personaje en especifico por el nombre.
+ *    description: Petición Get a un solo usuario especifico por su nombre.
+ *    parameters:
+ *      - name: nombre
+ *        in: path
+ *        description: Nombre del personaje que se quiera consultar.
+ *        required: true
+ *        schema:
+ *          type: string
+ *          format: string  
+ *    responses:
+ *      200:
+ *        description: Regresa un Json con la informacion del personaje que agrego en los parametros.
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/personaje'
+ *      400:
+ *        description: No se encontro el personaje con ese nombre.
+ */
+app.get('/personaje/n/:nombre',async(req,res)=>{
     const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
     const sentenciaSQL = `SELECT * FROM personajes WHERE nombre = '${[req.params.nombre]}'`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
@@ -50,6 +135,31 @@ app.get('/personaje/:nombre',async(req,res)=>{
 })
 
 
+
+/**
+ * @swagger
+ * /personaje:
+ *   post:
+ *     tags:
+ *       - Personajes
+ *     summary: Registrar un nuevo personaje.
+ *     description: Petición Post a la ruta de personaje para ingresar un nuevo registro.
+ *     requestBody:
+ *       description: Modificar el body para agregar un nuevo personaje.
+ *       content:
+ *         application/json:
+ *           schema:
+ *               $ref: '#/components/schemas/personaje'
+ *     responses:
+ *       200:
+ *         description: Insercion realizada con exito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/personaje'
+ *       500:
+ *         description: Error...
+ */
 app.post('/personaje',async(req,res)=>{
 try{
     const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
@@ -65,16 +175,68 @@ try{
   }
 })
 
+
+/**
+ * @swagger
+ * /personaje/{id}:
+ *   delete:
+ *     tags:
+ *       - Personajes
+ *     summary: Eliminar un personaje de la base de datos.
+ *     description: Petición Delete a la ruta de personaje para borrar por medio de su id.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id del personaje a ELIMINAR
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           format: int64
+ *     responses:
+ *       200:
+ *         description: El registro se elimino correctamente. id.'?'
+ */
 app.delete('/personaje/:id',async(req,res)=>{
     const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
     const sentenciaSQL = `DELETE FROM personajes WHERE id = '${[req.params.id]}'`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
     if(rows.affectedRows == 1){
-        res.status(200).send(`Insercion elimino correctamente el registro. \n id: '${[req.params.id]}'`);
+        res.status(200).send(`El registro se elimino correctamente. \n id: '${[req.params.id]}'`);
     }
 })
 
+
+/**
+ * @swagger
+ * /personaje/{id}:
+ *   patch:
+ *     tags:
+ *       - Personajes
+ *     summary: Actualizar un personaje.
+ *     description: Petición Patch a la ruta de personaje para modificar su registro.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id del personaje que desea actualizar.
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           format: int64
+ *     requestBody:
+ *       description: Modifica el body para hacer el Patch
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/resPatch'
+ *     responses:
+ *       200:
+ *         description: UPDATE realizada con exito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/resPatch'
+ */
 app.patch('/personaje/:id',async(req,res)=>{
 try{
     const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
@@ -141,15 +303,31 @@ app.listen(8082,()=>{
  *           type: string
  *           description: URL de la imagen.
  *           example: https://static.wikia.nocookie.net/gen-impact/images/7/7b/Zhongli_Card.png
- *     patch: 
+ *     resPatch: 
  *       type: object
- *       properties: 
- *         Usuario:
+ *       properties:
+ *         nombre:
  *           type: string
- *           description: Nombre del usuario
- *           example: Eleazar    
- *         Edad:
- *           type: int
- *           description: Edad del usuario   
- *           example: 24
+ *           description: Nombre del personaje.
+ *           example: Kokomi   
+ *         elemento:
+ *           type: string
+ *           description: Elemento del personaje. (Geo, Hydro, Pyro, Electro, Anemo, Cryo, Dendro)  
+ *           example: Hydro
+ *         rareza:
+ *           type: smallint
+ *           description: Rareza puede ser 5 o 4.
+ *           example: 5
+ *         region:
+ *           type: string
+ *           description: Region a la que pertenece. (Inazuma, Sumeru, Liyue, Mondstadt, Desconocida)
+ *           example: Inazuma
+ *         arma:
+ *           type: string
+ *           description: Arma que utiliza. (Espada, Mandoble, Arco, Catalizador, Lanza)
+ *           example: Catalizador
+ *         imagen:
+ *           type: string
+ *           description: URL de la imagen.
+ *           example: https://pbs.twimg.com/media/FAOLRwXVkAc9Cmj?format=jpg&name=4096x4096
  */

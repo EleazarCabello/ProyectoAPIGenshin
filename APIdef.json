@@ -6,6 +6,6 @@
     "Descripcion": "ContenidoReadme" 
     },
 "servers":[{"url": "http://localhost:8082"}],
-"tags": [{"name":"personajes","description":"Personajes jugables de Genshin Impact"}] 
+"tags": [{"name":"Personajes","description":"Personajes jugables de Genshin Impact"}] 
 }
 
