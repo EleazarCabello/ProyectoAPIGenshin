@@ -1,26 +1,102 @@
-const express = require('express');
-const cors = require('cors');
+const express = require('express')
 const app = express()
 const mysql = require('mysql2/promise')
+const swaggerUI = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
+const { SwaggerTheme } = require('swagger-themes');
+const fs = require('fs');
+const path = require('path');
+const redoc = require('redoc-express');
 
+const theme = new SwaggerTheme('v3');
+const options = {
+    explorer: true,
+    customCss: theme.getBuffer('dark')
+  };
 
+  let ContenidoReadme = fs.readFileSync(path.join(__dirname)+'/README.md',{encoding:'utf8',flag:'r'})
+  let apidef_string = fs.readFileSync(path.join(__dirname)+'/APIdef.json',{encoding:'utf8',flag:'r'})
+  let apidef_objeto = JSON.parse(apidef_string)
+  apidef_objeto.info.description=ContenidoReadme;
 
 app.use(express.json());
 app.use(express.text());
-app.use(cors);
+
+const swaggerOptions = {
+    definition: apidef_objeto,
+    apis: [`${path.join(__dirname,"./index.js")}`],
+    };
 
 app.get('/personaje',async(req,res)=>{
     let aletorio = Math.floor(Math.random()*68) + 1 ;
     const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
-    //const sentenciaSQL = `SELECT * FROM personajes WHERE id = ${aletorio}`;
-    const [rows, fields] = await connection.execute('SELECT * FROM `personajes` WHERE id = 1');
+    const sentenciaSQL = `SELECT * FROM personajes WHERE id = ${aletorio}`;
+    const [rows, fields] = await connection.execute(sentenciaSQL);
 
+    res.json(rows);
+})
+
+
+app.get('/personaje/:nombre',async(req,res)=>{
+    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const sentenciaSQL = `SELECT * FROM personajes WHERE nombre = '${[req.params.nombre]}'`;
+    const [rows, fields] = await connection.execute(sentenciaSQL);
+    
     if(rows.length == 0){
-        res.json({registros:"No se encontro usuario"});
+        res.json({registros:"No se encontro ningun personaje con ese nombre."});
     }else{
         res.json(rows);
     }
 })
+
+
+app.post('/personaje',async(req,res)=>{
+try{
+    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const sentenciaSQL = `INSERT INTO personajes (id, nombre, elemento, rareza, region, arma, imagen) VALUES ("${req.body.id}","${req.body.nombre}", "${req.body.elemento}", "${req.body.rareza}", "${req.body.region}", "${req.body.arma}", "${req.body.imagen}")`;
+    const [rows, fields] = await connection.execute(sentenciaSQL);
+
+    if(rows.affectedRows == 1){
+        res.status(200).send(`Insercion realizada con exito. \n id: ${req.body.id}\n nombre: ${req.body.nombre}\n elemento: ${req.body.elemento}\n rareza: ${req.body.rareza} \n region: ${req.body.region} \n arma: ${req.body.arma} \n imagen: ${req.body.imagen}"`);
+    }
+
+    } catch (error) {
+    res.status(500).send("Error: " + error.message);
+  }
+})
+
+app.delete('/personaje/:id',async(req,res)=>{
+    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const sentenciaSQL = `DELETE FROM personajes WHERE id = '${[req.params.id]}'`;
+    const [rows, fields] = await connection.execute(sentenciaSQL);
+
+    if(rows.affectedRows == 1){
+        res.status(200).send(`Insercion elimino correctamente el registro. \n id: '${[req.params.id]}'`);
+    }
+})
+
+app.patch('/personaje/:id',async(req,res)=>{
+try{
+    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const sentenciaSQL = `UPDATE personajes SET nombre='${req.body.nombre}',elemento='${req.body.elemento}', rareza=${req.body.rareza},region='${req.body.region}', arma='${req.body.arma}', imagen='${req.body.imagen}' WHERE id = '${[req.params.id]}'`;
+    const [rows, fields] = await connection.execute(sentenciaSQL);
+
+    if(rows.affectedRows == 1){
+        res.status(200).send(`Se actualizao correctamente el registro. \n id: ${[req.params.id]}`);
+    }
+
+    } catch (error) {
+    res.status(500).send("Error: " + error.message);
+  }
+})
+
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs",swaggerUI.serve,swaggerUI.setup(swaggerDocs,options));
+app.get("/docs.json",(req,res)=>{
+    res.json(swaggerDocs);
+})
+
 
 app.use((req,res)=>{
     res.status(404).json({estado:"Pagina no encontrada"})
@@ -29,3 +105,51 @@ app.use((req,res)=>{
 app.listen(8082,()=>{
     console.log("Servidor Express corriendo y escuchando en el puerto 8082")
 })
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     personaje: 
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: smallint
+ *           description: Identificador de cada personaje    
+ *           example: 67
+ *         nombre:
+ *           type: string
+ *           description: Nombre del personaje.
+ *           example: Zhongli    
+ *         elemento:
+ *           type: string
+ *           description: Elemento del personaje. (Geo, Hydro, Pyro, Electro, Anemo, Cryo, Dendro)  
+ *           example: Geo
+ *         rareza:
+ *           type: smallint
+ *           description: Rareza puede ser 5 o 4.
+ *           example: 5
+ *         region:
+ *           type: string
+ *           description: Region a la que pertenece. (Inazuma, Sumeru, Liyue, Mondstadt, Desconocida)
+ *           example: Liyue
+ *         arma:
+ *           type: string
+ *           description: Arma que utiliza. (Espada, Mandoble, Arco, Catalizador, Lanza)
+ *           example: Lanza
+ *         imagen:
+ *           type: string
+ *           description: URL de la imagen.
+ *           example: https://static.wikia.nocookie.net/gen-impact/images/7/7b/Zhongli_Card.png
+ *     patch: 
+ *       type: object
+ *       properties: 
+ *         Usuario:
+ *           type: string
+ *           description: Nombre del usuario
+ *           example: Eleazar    
+ *         Edad:
+ *           type: int
+ *           description: Edad del usuario   
+ *           example: 24
+ */
