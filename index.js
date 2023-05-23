@@ -96,7 +96,7 @@ app.get('/personaje',async(req,res)=>{
  *        description: No se encontro el personaje con ese id.
  */
 app.get('/personaje/i/:id',async(req,res)=>{
-    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `SELECT * FROM personajes WHERE id = ${[req.params.id]}`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
     
@@ -135,7 +135,7 @@ app.get('/personaje/i/:id',async(req,res)=>{
  *        description: No se encontro el personaje con ese nombre.
  */
 app.get('/personaje/n/:nombre',async(req,res)=>{
-    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `SELECT * FROM personajes WHERE nombre = '${[req.params.nombre]}'`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
     
@@ -174,7 +174,7 @@ app.get('/personaje/n/:nombre',async(req,res)=>{
  */
 app.post('/personaje',async(req,res)=>{
 try{
-    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `INSERT INTO personajes (id, nombre, elemento, rareza, region, arma, imagen) VALUES ("${req.body.id}","${req.body.nombre}", "${req.body.elemento}", "${req.body.rareza}", "${req.body.region}", "${req.body.arma}", "${req.body.imagen}")`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
@@ -209,7 +209,7 @@ try{
  *         description: El registro se elimino correctamente. id.'?'
  */
 app.delete('/personaje/:id',async(req,res)=>{
-    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `DELETE FROM personajes WHERE id = '${[req.params.id]}'`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
@@ -251,7 +251,7 @@ app.delete('/personaje/:id',async(req,res)=>{
  */
 app.patch('/personaje/:id',async(req,res)=>{
 try{
-    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `UPDATE personajes SET nombre='${req.body.nombre}',elemento='${req.body.elemento}', rareza=${req.body.rareza},region='${req.body.region}', arma='${req.body.arma}', imagen='${req.body.imagen}' WHERE id = '${[req.params.id]}'`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
