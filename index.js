@@ -9,6 +9,18 @@ const path = require('path');
 const redoc = require('redoc-express');
 const cors = require('cors')
 
+require('dotenv').config();
+
+const port = process.env.PORT || 8082;
+const dbConfig = {
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || "8082",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "genshin_impact"
+};
+console.log(dbConfig)
+
 const theme = new SwaggerTheme('v3');
 const options = {
     explorer: true,
@@ -49,7 +61,7 @@ const swaggerOptions = {
  */
 app.get('/personaje',async(req,res)=>{
     let aletorio = Math.floor(Math.random()*68) + 1 ;
-    const connection = await mysql.createConnection({host:'localhost', user:'root', database:'genshin_impact'});
+    const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `SELECT * FROM personajes WHERE id = ${aletorio}`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
@@ -264,7 +276,7 @@ app.use((req,res)=>{
     res.status(404).json({estado:"Pagina no encontrada"})
 })
 
-app.listen(8082,()=>{
+app.listen(port,()=>{
     console.log("Servidor Express corriendo y escuchando en el puerto 8082")
 })
 
