@@ -238,7 +238,7 @@ app.delete('/personaje/:id',async(req,res)=>{
  *             $ref: '#/components/schemas/resPatch'
  *     responses:
  *       200:
- *         description: Se actualizo correctamente el registro.  id: ? );
+ *         description: Se actualizo correctamente el registro.  id. ?
  */
 app.put('/personaje/:id',async(req,res)=>{
 try{
