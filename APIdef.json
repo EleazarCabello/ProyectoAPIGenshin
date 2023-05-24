@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "Descripcion": "ContenidoReadme" 
     },
-"servers":[{"url": "proyectoapigenshin-production.up.railway.app"}],
+"servers":[{"url": "https://proyectoapigenshin-production.up.railway.app"}],
 "tags": [{"name":"Personajes","description":"Personajes jugables de Genshin Impact"}] 
 }
 
