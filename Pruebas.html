@@ -24,7 +24,7 @@
             let res= await  fetch('https://proyectoapigenshin-production.up.railway.app/personaje')
             let data = await res.json()
             console.log(data)
-            document.getElementById('imagen').src=data[0].imagen
+            document.getElementById('imagen').src=data.imagen
         })
 </script>
 </html>
