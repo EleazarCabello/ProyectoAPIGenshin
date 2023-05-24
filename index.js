@@ -19,7 +19,6 @@ const dbConfig = {
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "genshin_impact"
 };
-console.log(dbConfig)
 
 const theme = new SwaggerTheme('v3');
 const options = {
@@ -65,7 +64,7 @@ app.get('/personaje',async(req,res)=>{
     const sentenciaSQL = `SELECT * FROM personajes WHERE id = ${aletorio}`;
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
-    res.json(rows);
+    res.json(rows[0]);
 })
 
 
@@ -103,7 +102,7 @@ app.get('/personaje/i/:id',async(req,res)=>{
     if(rows.length == 0){
         res.json({registros:"No se encontro ningun personaje con ese id."});
     }else{
-        res.json(rows);
+        res.json(rows[0]);
     }
 })
 
@@ -142,7 +141,7 @@ app.get('/personaje/n/:nombre',async(req,res)=>{
     if(rows.length == 0){
         res.json({registros:"No se encontro ningun personaje con ese nombre."});
     }else{
-        res.json(rows);
+        res.json(rows[0]);
     }
 })
 
@@ -165,10 +164,6 @@ app.get('/personaje/n/:nombre',async(req,res)=>{
  *     responses:
  *       200:
  *         description: Insercion realizada con exito.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/personaje'
  *       500:
  *         description: Error...
  */
@@ -179,7 +174,7 @@ try{
     const [rows, fields] = await connection.execute(sentenciaSQL);
 
     if(rows.affectedRows == 1){
-        res.status(200).send(`Insercion realizada con exito. \n id: ${req.body.id}\n nombre: ${req.body.nombre}\n elemento: ${req.body.elemento}\n rareza: ${req.body.rareza} \n region: ${req.body.region} \n arma: ${req.body.arma} \n imagen: ${req.body.imagen}"`);
+        res.status(200).send(`Insercion realizada con exito.`);
     }
 
     } catch (error) {
@@ -243,13 +238,9 @@ app.delete('/personaje/:id',async(req,res)=>{
  *             $ref: '#/components/schemas/resPatch'
  *     responses:
  *       200:
- *         description: UPDATE realizada con exito.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/resPatch'
+ *         description: Se actualizo correctamente el registro.  id: ? );
  */
-app.patch('/personaje/:id',async(req,res)=>{
+app.put('/personaje/:id',async(req,res)=>{
 try{
     const connection = await mysql.createConnection(dbConfig);
     const sentenciaSQL = `UPDATE personajes SET nombre='${req.body.nombre}',elemento='${req.body.elemento}', rareza=${req.body.rareza},region='${req.body.region}', arma='${req.body.arma}', imagen='${req.body.imagen}' WHERE id = '${[req.params.id]}'`;
