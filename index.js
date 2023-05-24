@@ -217,7 +217,7 @@ app.delete('/personaje/:id',async(req,res)=>{
 /**
  * @swagger
  * /personaje/{id}:
- *   patch:
+ *   put:
  *     tags:
  *       - Personajes
  *     summary: Actualizar un personaje.
